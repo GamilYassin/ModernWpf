@@ -5,16 +5,20 @@ using System.Windows.Data;
 
 namespace ModernWpf.Controls.Primitives
 {
-    public class SharedSizeGroupConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return (Visibility)value != Visibility.Collapsed ? (string)parameter : null;
-        }
+	public class SharedSizeGroupConverter : IValueConverter
+	{
+		#region Methods
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
+		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			return (Visibility)value != Visibility.Collapsed ? (string)parameter : null;
+		}
+
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion Methods
+	}
 }

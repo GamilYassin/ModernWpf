@@ -6,64 +6,72 @@ using System.Windows.Input;
 
 namespace ModernWpf.Controls.Primitives
 {
-    public class MenuPopup : Popup
-    {
-        #region IsSuspendingAnimation
+	public class MenuPopup : Popup
+	{
+		#region Fields
 
-        private static readonly DependencyPropertyKey IsSuspendingAnimationPropertyKey =
-            DependencyProperty.RegisterReadOnly(
-                nameof(IsSuspendingAnimation),
-                typeof(bool),
-                typeof(MenuPopup),
-                null);
+		private static readonly DependencyPropertyKey IsSuspendingAnimationPropertyKey =
+			DependencyProperty.RegisterReadOnly(
+				nameof(IsSuspendingAnimation),
+				typeof(bool),
+				typeof(MenuPopup),
+				null);
 
-        public static readonly DependencyProperty IsSuspendingAnimationProperty =
-            IsSuspendingAnimationPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty IsSuspendingAnimationProperty =
+			IsSuspendingAnimationPropertyKey.DependencyProperty;
 
-        public bool IsSuspendingAnimation
-        {
-            get => (bool)GetValue(IsSuspendingAnimationProperty);
-            private set => SetValue(IsSuspendingAnimationPropertyKey, value);
-        }
+		#endregion Fields
 
-        #endregion
+		#region Properties
 
-        protected override void OnOpened(EventArgs e)
-        {
-            base.OnOpened(e);
-            ClearValue(IsSuspendingAnimationPropertyKey);
-        }
+		public bool IsSuspendingAnimation
+		{
+			get => (bool)GetValue(IsSuspendingAnimationProperty);
+			private set => SetValue(IsSuspendingAnimationPropertyKey, value);
+		}
 
-        protected override void OnClosed(EventArgs e)
-        {
-            base.OnClosed(e);
-            ClearValue(IsSuspendingAnimationPropertyKey);
-        }
+		#endregion Properties
 
-        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
-        {
-            if (e.Property == IsOpenProperty)
-            {
-                OnIsOpenChanged(e);
-            }
+		#region Methods
 
-            base.OnPropertyChanged(e);
-        }
+		private void OnIsOpenChanged(DependencyPropertyChangedEventArgs e)
+		{
+			if ((bool)e.NewValue)
+			{
+				var window = Window.GetWindow(this);
+				if (window != null)
+				{
+					var focusedElement = FocusManager.GetFocusedElement(window);
+					if (focusedElement is TextBoxBase || focusedElement is PasswordBox)
+					{
+						IsSuspendingAnimation = true;
+					}
+				}
+			}
+		}
 
-        private void OnIsOpenChanged(DependencyPropertyChangedEventArgs e)
-        {
-            if ((bool)e.NewValue)
-            {
-                var window = Window.GetWindow(this);
-                if (window != null)
-                {
-                    var focusedElement = FocusManager.GetFocusedElement(window);
-                    if (focusedElement is TextBoxBase || focusedElement is PasswordBox)
-                    {
-                        IsSuspendingAnimation = true;
-                    }
-                }
-            }
-        }
-    }
+		protected override void OnClosed(EventArgs e)
+		{
+			base.OnClosed(e);
+			ClearValue(IsSuspendingAnimationPropertyKey);
+		}
+
+		protected override void OnOpened(EventArgs e)
+		{
+			base.OnOpened(e);
+			ClearValue(IsSuspendingAnimationPropertyKey);
+		}
+
+		protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+		{
+			if (e.Property == IsOpenProperty)
+			{
+				OnIsOpenChanged(e);
+			}
+
+			base.OnPropertyChanged(e);
+		}
+
+		#endregion Methods
+	}
 }

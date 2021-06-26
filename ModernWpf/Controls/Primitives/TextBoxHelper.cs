@@ -3,167 +3,160 @@ using System.Windows.Controls;
 
 namespace ModernWpf.Controls.Primitives
 {
-    public static class TextBoxHelper
-    {
-        private const string ButtonStatesGroup = "ButtonStates";
-        private const string ButtonVisibleState = "ButtonVisible";
-        private const string ButtonCollapsedState = "ButtonCollapsed";
+	public static class TextBoxHelper
+	{
+		#region Fields
 
-        #region IsEnabled
+		private const string ButtonCollapsedState = "ButtonCollapsed";
 
-        public static bool GetIsEnabled(TextBox textBox)
-        {
-            return (bool)textBox.GetValue(IsEnabledProperty);
-        }
+		private const string ButtonStatesGroup = "ButtonStates";
 
-        public static void SetIsEnabled(TextBox textBox, bool value)
-        {
-            textBox.SetValue(IsEnabledProperty, value);
-        }
+		private const string ButtonVisibleState = "ButtonVisible";
 
-        public static readonly DependencyProperty IsEnabledProperty =
-            DependencyProperty.RegisterAttached(
-                "IsEnabled",
-                typeof(bool),
-                typeof(TextBoxHelper),
-                new PropertyMetadata(OnIsEnabledChanged));
+		private static readonly DependencyPropertyKey HasTextPropertyKey =
+			DependencyProperty.RegisterAttachedReadOnly(
+				"HasText",
+				typeof(bool),
+				typeof(TextBoxHelper),
+				null);
 
-        private static void OnIsEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var textBox = (TextBox)d;
+		public static readonly DependencyProperty HasTextProperty =
+			HasTextPropertyKey.DependencyProperty;
 
-            if ((bool)e.NewValue)
-            {
-                textBox.Loaded += OnLoaded;
-                textBox.TextChanged += OnTextChanged;
-                UpdateHasText(textBox);
+		public static readonly DependencyProperty IsDeleteButtonProperty =
+			DependencyProperty.RegisterAttached(
+				"IsDeleteButton",
+				typeof(bool),
+				typeof(TextBoxHelper),
+				new PropertyMetadata(OnIsDeleteButtonChanged));
 
-            }
-            else
-            {
-                textBox.Loaded -= OnLoaded;
-                textBox.TextChanged -= OnTextChanged;
-                textBox.ClearValue(HasTextPropertyKey);
-            }
-        }
+		public static readonly DependencyProperty IsDeleteButtonVisibleProperty =
+			DependencyProperty.RegisterAttached(
+				"IsDeleteButtonVisible",
+				typeof(bool),
+				typeof(TextBoxHelper),
+				new PropertyMetadata(OnIsDeleteButtonVisibleChanged));
 
-        #endregion
+		public static readonly DependencyProperty IsEnabledProperty =
+			DependencyProperty.RegisterAttached(
+				"IsEnabled",
+				typeof(bool),
+				typeof(TextBoxHelper),
+				new PropertyMetadata(OnIsEnabledChanged));
 
-        #region HasText
+		#endregion Fields
 
-        private static readonly DependencyPropertyKey HasTextPropertyKey =
-            DependencyProperty.RegisterAttachedReadOnly(
-                "HasText",
-                typeof(bool),
-                typeof(TextBoxHelper),
-                null);
+		#region Methods
 
-        public static readonly DependencyProperty HasTextProperty =
-            HasTextPropertyKey.DependencyProperty;
+		private static void OnDeleteButtonClick(object sender, RoutedEventArgs e)
+		{
+			var button = (Button)sender;
+			if (button.TemplatedParent is TextBox textBox)
+			{
+				textBox.SetCurrentValue(TextBox.TextProperty, null);
+			}
+		}
 
-        public static bool GetHasText(TextBox textBox)
-        {
-            return (bool)textBox.GetValue(HasTextProperty);
-        }
+		private static void OnIsDeleteButtonChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			var button = (Button)d;
 
-        private static void SetHasText(TextBox textBox, bool value)
-        {
-            textBox.SetValue(HasTextPropertyKey, value);
-        }
+			if ((bool)e.OldValue)
+			{
+				button.Click -= OnDeleteButtonClick;
+			}
 
-        private static void UpdateHasText(TextBox textBox)
-        {
-            SetHasText(textBox, !string.IsNullOrEmpty(textBox.Text));
-        }
+			if ((bool)e.NewValue)
+			{
+				button.Click += OnDeleteButtonClick;
+			}
+		}
 
-        #endregion
+		private static void OnIsDeleteButtonVisibleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			UpdateVisualStates((TextBox)d, (bool)e.NewValue);
+		}
 
-        #region IsDeleteButton
+		private static void OnIsEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			var textBox = (TextBox)d;
 
-        public static bool GetIsDeleteButton(Button button)
-        {
-            return (bool)button.GetValue(IsDeleteButtonProperty);
-        }
+			if ((bool)e.NewValue)
+			{
+				textBox.Loaded += OnLoaded;
+				textBox.TextChanged += OnTextChanged;
+				UpdateHasText(textBox);
+			}
+			else
+			{
+				textBox.Loaded -= OnLoaded;
+				textBox.TextChanged -= OnTextChanged;
+				textBox.ClearValue(HasTextPropertyKey);
+			}
+		}
 
-        public static void SetIsDeleteButton(Button button, bool value)
-        {
-            button.SetValue(IsDeleteButtonProperty, value);
-        }
+		private static void OnLoaded(object sender, RoutedEventArgs e)
+		{
+			var textBox = (TextBox)sender;
+			UpdateVisualStates(textBox, GetIsDeleteButtonVisible(textBox));
+		}
 
-        public static readonly DependencyProperty IsDeleteButtonProperty =
-            DependencyProperty.RegisterAttached(
-                "IsDeleteButton",
-                typeof(bool),
-                typeof(TextBoxHelper),
-                new PropertyMetadata(OnIsDeleteButtonChanged));
+		private static void OnTextChanged(object sender, TextChangedEventArgs e)
+		{
+			var textBox = (TextBox)sender;
+			UpdateHasText(textBox);
+		}
 
-        private static void OnIsDeleteButtonChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var button = (Button)d;
+		private static void SetHasText(TextBox textBox, bool value)
+		{
+			textBox.SetValue(HasTextPropertyKey, value);
+		}
 
-            if ((bool)e.OldValue)
-            {
-                button.Click -= OnDeleteButtonClick;
-            }
+		private static void UpdateHasText(TextBox textBox)
+		{
+			SetHasText(textBox, !string.IsNullOrEmpty(textBox.Text));
+		}
 
-            if ((bool)e.NewValue)
-            {
-                button.Click += OnDeleteButtonClick;
-            }
-        }
+		private static void UpdateVisualStates(TextBox textBox, bool isDeleteButtonVisible)
+		{
+			VisualStateManager.GoToState(textBox, isDeleteButtonVisible ? ButtonVisibleState : ButtonCollapsedState, true);
+		}
 
-        #endregion
+		public static bool GetHasText(TextBox textBox)
+		{
+			return (bool)textBox.GetValue(HasTextProperty);
+		}
 
-        #region IsDeleteButtonVisible
+		public static bool GetIsDeleteButton(Button button)
+		{
+			return (bool)button.GetValue(IsDeleteButtonProperty);
+		}
 
-        public static readonly DependencyProperty IsDeleteButtonVisibleProperty =
-            DependencyProperty.RegisterAttached(
-                "IsDeleteButtonVisible",
-                typeof(bool),
-                typeof(TextBoxHelper),
-                new PropertyMetadata(OnIsDeleteButtonVisibleChanged));
+		public static bool GetIsDeleteButtonVisible(TextBox textBox)
+		{
+			return (bool)textBox.GetValue(IsDeleteButtonVisibleProperty);
+		}
 
-        public static bool GetIsDeleteButtonVisible(TextBox textBox)
-        {
-            return (bool)textBox.GetValue(IsDeleteButtonVisibleProperty);
-        }
+		public static bool GetIsEnabled(TextBox textBox)
+		{
+			return (bool)textBox.GetValue(IsEnabledProperty);
+		}
 
-        public static void SetIsDeleteButtonVisible(TextBox textBox, bool value)
-        {
-            textBox.SetValue(IsDeleteButtonVisibleProperty, value);
-        }
+		public static void SetIsDeleteButton(Button button, bool value)
+		{
+			button.SetValue(IsDeleteButtonProperty, value);
+		}
 
-        private static void OnIsDeleteButtonVisibleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            UpdateVisualStates((TextBox)d, (bool)e.NewValue);
-        }
+		public static void SetIsDeleteButtonVisible(TextBox textBox, bool value)
+		{
+			textBox.SetValue(IsDeleteButtonVisibleProperty, value);
+		}
 
-        #endregion
+		public static void SetIsEnabled(TextBox textBox, bool value)
+		{
+			textBox.SetValue(IsEnabledProperty, value);
+		}
 
-        private static void OnLoaded(object sender, RoutedEventArgs e)
-        {
-            var textBox = (TextBox)sender;
-            UpdateVisualStates(textBox, GetIsDeleteButtonVisible(textBox));
-        }
-
-        private static void OnTextChanged(object sender, TextChangedEventArgs e)
-        {
-            var textBox = (TextBox)sender;
-            UpdateHasText(textBox);
-        }
-
-        private static void OnDeleteButtonClick(object sender, RoutedEventArgs e)
-        {
-            var button = (Button)sender;
-            if (button.TemplatedParent is TextBox textBox)
-            {
-                textBox.SetCurrentValue(TextBox.TextProperty, null);
-            }
-        }
-
-        private static void UpdateVisualStates(TextBox textBox, bool isDeleteButtonVisible)
-        {
-            VisualStateManager.GoToState(textBox, isDeleteButtonVisible ? ButtonVisibleState : ButtonCollapsedState, true);
-        }
-    }
+		#endregion Methods
+	}
 }

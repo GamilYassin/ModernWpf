@@ -4,289 +4,292 @@ using System.Windows.Media;
 
 namespace ModernWpf.Controls.Primitives
 {
-    /// <summary>
-    /// Represents the visual elements of a DataGridCell.
-    /// </summary>
-    public class DataGridCellPresenter : ContentPresenter
-    {
-        /// <summary>
-        /// Initializes a new instance of the DataGridCellPresenter class.
-        /// </summary>
-        public DataGridCellPresenter()
-        {
-            _currencyVisualHelper = new BorderHelper(this);
-            _focusVisualPrimaryHelper = new BorderHelper(this);
-            _focusVisualSecondaryHelper = new BorderHelper(this);
-        }
+	/// <summary>
+	///  Represents the visual elements of a DataGridCell.
+	/// </summary>
+	public class DataGridCellPresenter : ContentPresenter
+	{
+		#region Fields
 
-        #region Background
+		private readonly BorderHelper _currencyVisualHelper;
 
-        public static readonly DependencyProperty BackgroundProperty =
-            Panel.BackgroundProperty.AddOwner(typeof(DataGridCellPresenter),
-                new FrameworkPropertyMetadata(
-                    null,
-                    FrameworkPropertyMetadataOptions.AffectsRender |
-                    FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender));
+		private readonly BorderHelper _focusVisualPrimaryHelper;
 
-        public Brush Background
-        {
-            get { return (Brush)GetValue(BackgroundProperty); }
-            set { SetValue(BackgroundProperty, value); }
-        }
+		private readonly BorderHelper _focusVisualSecondaryHelper;
 
-        #endregion
+		public static readonly DependencyProperty BackgroundProperty =
+					Panel.BackgroundProperty.AddOwner(typeof(DataGridCellPresenter),
+						new FrameworkPropertyMetadata(
+							null,
+							FrameworkPropertyMetadataOptions.AffectsRender |
+							FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender));
 
-        #region CurrencyVisualBrush
+		public static readonly DependencyProperty CurrencyVisualBrushProperty =
+					DependencyProperty.Register(
+						nameof(CurrencyVisualBrush),
+						typeof(Brush),
+						typeof(DataGridCellPresenter),
+						new FrameworkPropertyMetadata(
+							null,
+							FrameworkPropertyMetadataOptions.AffectsRender));
 
-        public static readonly DependencyProperty CurrencyVisualBrushProperty =
-            DependencyProperty.Register(
-                nameof(CurrencyVisualBrush),
-                typeof(Brush),
-                typeof(DataGridCellPresenter),
-                new FrameworkPropertyMetadata(
-                    null,
-                    FrameworkPropertyMetadataOptions.AffectsRender));
+		public static readonly DependencyProperty CurrencyVisualThicknessProperty =
+					DependencyProperty.Register(
+						nameof(CurrencyVisualThickness),
+						typeof(double),
+						typeof(DataGridCellPresenter),
+						new FrameworkPropertyMetadata(
+							0.0,
+							FrameworkPropertyMetadataOptions.AffectsRender,
+							OnCurrencyVisualThicknessChanged));
 
-        public Brush CurrencyVisualBrush
-        {
-            get => (Brush)GetValue(CurrencyVisualBrushProperty);
-            set => SetValue(CurrencyVisualBrushProperty, value);
-        }
+		public static readonly DependencyProperty FocusVisualPrimaryBrushProperty =
+					DependencyProperty.Register(
+						nameof(FocusVisualPrimaryBrush),
+						typeof(Brush),
+						typeof(DataGridCellPresenter),
+						new FrameworkPropertyMetadata(
+							null,
+							FrameworkPropertyMetadataOptions.AffectsRender));
 
-        #endregion
+		public static readonly DependencyProperty FocusVisualPrimaryThicknessProperty =
+					DependencyProperty.Register(
+						nameof(FocusVisualPrimaryThickness),
+						typeof(double),
+						typeof(DataGridCellPresenter),
+						new FrameworkPropertyMetadata(
+							0.0,
+							FrameworkPropertyMetadataOptions.AffectsRender,
+							OnFocusVisualPrimaryThicknessChanged));
 
-        #region CurrencyVisualThickness
+		public static readonly DependencyProperty FocusVisualSecondaryBrushProperty =
+					DependencyProperty.Register(
+						nameof(FocusVisualSecondaryBrush),
+						typeof(Brush),
+						typeof(DataGridCellPresenter),
+						new FrameworkPropertyMetadata(
+							null,
+							FrameworkPropertyMetadataOptions.AffectsRender));
 
-        public static readonly DependencyProperty CurrencyVisualThicknessProperty =
-            DependencyProperty.Register(
-                nameof(CurrencyVisualThickness),
-                typeof(double),
-                typeof(DataGridCellPresenter),
-                new FrameworkPropertyMetadata(
-                    0.0,
-                    FrameworkPropertyMetadataOptions.AffectsRender,
-                    OnCurrencyVisualThicknessChanged));
+		public static readonly DependencyProperty FocusVisualSecondaryThicknessProperty =
+					DependencyProperty.Register(
+						nameof(FocusVisualSecondaryThickness),
+						typeof(double),
+						typeof(DataGridCellPresenter),
+						new FrameworkPropertyMetadata(
+							0.0,
+							FrameworkPropertyMetadataOptions.AffectsRender,
+							OnFocusVisualSecondaryThicknessChanged));
 
-        public double CurrencyVisualThickness
-        {
-            get => (double)GetValue(CurrencyVisualThicknessProperty);
-            set => SetValue(CurrencyVisualThicknessProperty, value);
-        }
+		public static readonly DependencyProperty IsCurrencyVisualVisibleProperty =
+					DependencyProperty.Register(
+						nameof(IsCurrencyVisualVisible),
+						typeof(bool),
+						typeof(DataGridCellPresenter),
+						new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
 
-        private static void OnCurrencyVisualThicknessChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            ((DataGridCellPresenter)d)._currencyVisualHelper.ClearPenCache();
-        }
+		public static readonly DependencyProperty IsFocusVisualVisibleProperty =
+					DependencyProperty.Register(
+						nameof(IsFocusVisualVisible),
+						typeof(bool),
+						typeof(DataGridCellPresenter),
+						new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
 
-        #endregion
+		#endregion Fields
 
-        #region FocusVisualPrimaryBrush
+		#region Constructors
 
-        public static readonly DependencyProperty FocusVisualPrimaryBrushProperty =
-            DependencyProperty.Register(
-                nameof(FocusVisualPrimaryBrush),
-                typeof(Brush),
-                typeof(DataGridCellPresenter),
-                new FrameworkPropertyMetadata(
-                    null,
-                    FrameworkPropertyMetadataOptions.AffectsRender));
+		/// <summary>
+		///  Initializes a new instance of the DataGridCellPresenter class.
+		/// </summary>
+		public DataGridCellPresenter()
+		{
+			_currencyVisualHelper = new BorderHelper(this);
+			_focusVisualPrimaryHelper = new BorderHelper(this);
+			_focusVisualSecondaryHelper = new BorderHelper(this);
+		}
 
-        public Brush FocusVisualPrimaryBrush
-        {
-            get => (Brush)GetValue(FocusVisualPrimaryBrushProperty);
-            set => SetValue(FocusVisualPrimaryBrushProperty, value);
-        }
+		#endregion Constructors
 
-        #endregion
+		#region Properties
 
-        #region FocusVisualPrimaryThickness
+		public Brush Background
+		{
+			get { return (Brush)GetValue(BackgroundProperty); }
+			set { SetValue(BackgroundProperty, value); }
+		}
 
-        public static readonly DependencyProperty FocusVisualPrimaryThicknessProperty =
-            DependencyProperty.Register(
-                nameof(FocusVisualPrimaryThickness),
-                typeof(double),
-                typeof(DataGridCellPresenter),
-                new FrameworkPropertyMetadata(
-                    0.0,
-                    FrameworkPropertyMetadataOptions.AffectsRender,
-                    OnFocusVisualPrimaryThicknessChanged));
+		public Brush CurrencyVisualBrush
+		{
+			get => (Brush)GetValue(CurrencyVisualBrushProperty);
+			set => SetValue(CurrencyVisualBrushProperty, value);
+		}
 
-        public double FocusVisualPrimaryThickness
-        {
-            get => (double)GetValue(FocusVisualPrimaryThicknessProperty);
-            set => SetValue(FocusVisualPrimaryThicknessProperty, value);
-        }
+		public double CurrencyVisualThickness
+		{
+			get => (double)GetValue(CurrencyVisualThicknessProperty);
+			set => SetValue(CurrencyVisualThicknessProperty, value);
+		}
 
-        private static void OnFocusVisualPrimaryThicknessChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            ((DataGridCellPresenter)d)._focusVisualPrimaryHelper.ClearPenCache();
-        }
+		public Brush FocusVisualPrimaryBrush
+		{
+			get => (Brush)GetValue(FocusVisualPrimaryBrushProperty);
+			set => SetValue(FocusVisualPrimaryBrushProperty, value);
+		}
 
-        #endregion
+		public double FocusVisualPrimaryThickness
+		{
+			get => (double)GetValue(FocusVisualPrimaryThicknessProperty);
+			set => SetValue(FocusVisualPrimaryThicknessProperty, value);
+		}
 
-        #region FocusVisualSecondaryBrush
+		public Brush FocusVisualSecondaryBrush
+		{
+			get => (Brush)GetValue(FocusVisualSecondaryBrushProperty);
+			set => SetValue(FocusVisualSecondaryBrushProperty, value);
+		}
 
-        public static readonly DependencyProperty FocusVisualSecondaryBrushProperty =
-            DependencyProperty.Register(
-                nameof(FocusVisualSecondaryBrush),
-                typeof(Brush),
-                typeof(DataGridCellPresenter),
-                new FrameworkPropertyMetadata(
-                    null,
-                    FrameworkPropertyMetadataOptions.AffectsRender));
+		public double FocusVisualSecondaryThickness
+		{
+			get => (double)GetValue(FocusVisualSecondaryThicknessProperty);
+			set => SetValue(FocusVisualSecondaryThicknessProperty, value);
+		}
 
-        public Brush FocusVisualSecondaryBrush
-        {
-            get => (Brush)GetValue(FocusVisualSecondaryBrushProperty);
-            set => SetValue(FocusVisualSecondaryBrushProperty, value);
-        }
+		public bool IsCurrencyVisualVisible
+		{
+			get => (bool)GetValue(IsCurrencyVisualVisibleProperty);
+			set => SetValue(IsCurrencyVisualVisibleProperty, value);
+		}
 
-        #endregion
+		public bool IsFocusVisualVisible
+		{
+			get => (bool)GetValue(IsFocusVisualVisibleProperty);
+			set => SetValue(IsFocusVisualVisibleProperty, value);
+		}
 
-        #region FocusVisualSecondaryThickness
+		#endregion Properties
 
-        public static readonly DependencyProperty FocusVisualSecondaryThicknessProperty =
-            DependencyProperty.Register(
-                nameof(FocusVisualSecondaryThickness),
-                typeof(double),
-                typeof(DataGridCellPresenter),
-                new FrameworkPropertyMetadata(
-                    0.0,
-                    FrameworkPropertyMetadataOptions.AffectsRender,
-                    OnFocusVisualSecondaryThicknessChanged));
+		#region Methods
 
-        public double FocusVisualSecondaryThickness
-        {
-            get => (double)GetValue(FocusVisualSecondaryThicknessProperty);
-            set => SetValue(FocusVisualSecondaryThicknessProperty, value);
-        }
+		private static void OnCurrencyVisualThicknessChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			((DataGridCellPresenter)d)._currencyVisualHelper.ClearPenCache();
+		}
 
-        private static void OnFocusVisualSecondaryThicknessChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            ((DataGridCellPresenter)d)._focusVisualSecondaryHelper.ClearPenCache();
-        }
+		private static void OnFocusVisualPrimaryThicknessChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			((DataGridCellPresenter)d)._focusVisualPrimaryHelper.ClearPenCache();
+		}
 
-        #endregion
+		private static void OnFocusVisualSecondaryThicknessChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			((DataGridCellPresenter)d)._focusVisualSecondaryHelper.ClearPenCache();
+		}
 
-        #region IsCurrencyVisualVisible
+		protected override void OnRender(DrawingContext dc)
+		{
+			Brush background = Background;
+			if (background != null)
+			{
+				dc.DrawRectangle(background, null, new Rect(RenderSize));
+			}
 
-        public static readonly DependencyProperty IsCurrencyVisualVisibleProperty =
-            DependencyProperty.Register(
-                nameof(IsCurrencyVisualVisible),
-                typeof(bool),
-                typeof(DataGridCellPresenter),
-                new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
+			base.OnRender(dc);
 
-        public bool IsCurrencyVisualVisible
-        {
-            get => (bool)GetValue(IsCurrencyVisualVisibleProperty);
-            set => SetValue(IsCurrencyVisualVisibleProperty, value);
-        }
+			if (IsCurrencyVisualVisible)
+			{
+				_currencyVisualHelper.DrawBorder(dc, CurrencyVisualBrush, CurrencyVisualThickness);
+			}
 
-        #endregion
+			if (IsFocusVisualVisible)
+			{
+				double focusVisualPrimaryThickness = FocusVisualPrimaryThickness;
+				_focusVisualPrimaryHelper.DrawBorder(dc, FocusVisualPrimaryBrush, focusVisualPrimaryThickness);
+				_focusVisualSecondaryHelper.DrawBorder(dc, FocusVisualSecondaryBrush, FocusVisualSecondaryThickness, focusVisualPrimaryThickness);
+			}
+		}
 
-        #region IsFocusVisualVisible
+		#endregion Methods
 
-        public static readonly DependencyProperty IsFocusVisualVisibleProperty =
-            DependencyProperty.Register(
-                nameof(IsFocusVisualVisible),
-                typeof(bool),
-                typeof(DataGridCellPresenter),
-                new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
+		#region Classes
 
-        public bool IsFocusVisualVisible
-        {
-            get => (bool)GetValue(IsFocusVisualVisibleProperty);
-            set => SetValue(IsFocusVisualVisibleProperty, value);
-        }
+		private class BorderHelper
+		{
+			#region Fields
 
-        #endregion
+			private readonly UIElement _owner;
 
-        protected override void OnRender(DrawingContext dc)
-        {
-            Brush background = Background;
-            if (background != null)
-            {
-                dc.DrawRectangle(background, null, new Rect(RenderSize));
-            }
+			#endregion Fields
 
-            base.OnRender(dc);
+			#region Constructors
 
-            if (IsCurrencyVisualVisible)
-            {
-                _currencyVisualHelper.DrawBorder(dc, CurrencyVisualBrush, CurrencyVisualThickness);
-            }
+			public BorderHelper(UIElement owner)
+			{
+				_owner = owner;
+			}
 
-            if (IsFocusVisualVisible)
-            {
-                double focusVisualPrimaryThickness = FocusVisualPrimaryThickness;
-                _focusVisualPrimaryHelper.DrawBorder(dc, FocusVisualPrimaryBrush, focusVisualPrimaryThickness);
-                _focusVisualSecondaryHelper.DrawBorder(dc, FocusVisualSecondaryBrush, FocusVisualSecondaryThickness, focusVisualPrimaryThickness);
-            }
-        }
+			#endregion Constructors
 
-        private class BorderHelper
-        {
-            private readonly UIElement _owner;
+			#region Properties
 
-            public BorderHelper(UIElement owner)
-            {
-                _owner = owner;
-            }
+			private Pen PenCache { get; set; }
 
-            private Size RenderSize => _owner.RenderSize;
+			private Size RenderSize => _owner.RenderSize;
 
-            private Pen PenCache { get; set; }
+			#endregion Properties
 
-            public void ClearPenCache()
-            {
-                PenCache = null;
-            }
+			#region Methods
 
-            public void DrawBorder(
-                DrawingContext dc,
-                Brush brush,
-                double thickness,
-                double margin = 0)
-            {
-                if (thickness > 0 && brush != null)
-                {
-                    Pen pen = PenCache;
-                    if (pen == null)
-                    {
-                        pen = new Pen(brush, thickness);
+			public void ClearPenCache()
+			{
+				PenCache = null;
+			}
 
-                        if (brush.IsFrozen)
-                        {
-                            pen.Freeze();
-                        }
+			public void DrawBorder(
+				DrawingContext dc,
+				Brush brush,
+				double thickness,
+				double margin = 0)
+			{
+				if (thickness > 0 && brush != null)
+				{
+					Pen pen = PenCache;
+					if (pen == null)
+					{
+						pen = new Pen(brush, thickness);
 
-                        PenCache = pen;
-                    }
+						if (brush.IsFrozen)
+						{
+							pen.Freeze();
+						}
 
-                    double halfThickness = thickness * 0.5;
+						PenCache = pen;
+					}
 
-                    Rect rect = new Rect(
-                        new Point(margin + halfThickness,
-                                  margin + halfThickness),
-                        new Point(RenderSize.Width - margin - halfThickness,
-                                  RenderSize.Height - margin - halfThickness));
+					double halfThickness = thickness * 0.5;
 
-                    //GuidelineSet guidelines = new GuidelineSet();
-                    //guidelines.GuidelinesX.Add(rect.Left + halfThickness);
-                    //guidelines.GuidelinesX.Add(rect.Right + halfThickness);
-                    //guidelines.GuidelinesY.Add(rect.Top + halfThickness);
-                    //guidelines.GuidelinesY.Add(rect.Bottom + halfThickness);
+					Rect rect = new Rect(
+						new Point(margin + halfThickness,
+								  margin + halfThickness),
+						new Point(RenderSize.Width - margin - halfThickness,
+								  RenderSize.Height - margin - halfThickness));
 
-                    //dc.PushGuidelineSet(guidelines);
-                    dc.DrawRectangle(null, pen, rect);
-                    //dc.Pop();
-                }
-            }
-        }
+					//GuidelineSet guidelines = new GuidelineSet();
+					//guidelines.GuidelinesX.Add(rect.Left + halfThickness);
+					//guidelines.GuidelinesX.Add(rect.Right + halfThickness);
+					//guidelines.GuidelinesY.Add(rect.Top + halfThickness);
+					//guidelines.GuidelinesY.Add(rect.Bottom + halfThickness);
 
-        private readonly BorderHelper _currencyVisualHelper;
-        private readonly BorderHelper _focusVisualPrimaryHelper;
-        private readonly BorderHelper _focusVisualSecondaryHelper;
-    }
+					//dc.PushGuidelineSet(guidelines);
+					dc.DrawRectangle(null, pen, rect);
+
+					//dc.Pop();
+				}
+			}
+
+			#endregion Methods
+		}
+
+		#endregion Classes
+	}
 }

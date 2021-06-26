@@ -4,93 +4,93 @@ using System.Windows.Documents;
 
 namespace ModernWpf.Controls.Primitives
 {
-    public static class RichTextBoxHelper
-    {
-        #region IsEnabled
+	public static class RichTextBoxHelper
+	{
+		#region Fields
 
-        public static readonly DependencyProperty IsEnabledProperty =
-            DependencyProperty.RegisterAttached(
-                "IsEnabled",
-                typeof(bool),
-                typeof(RichTextBoxHelper),
-                new PropertyMetadata(false, OnIsEnabledChanged));
+		private static readonly DependencyPropertyKey IsEmptyPropertyKey =
+			DependencyProperty.RegisterAttachedReadOnly(
+				"IsEmpty",
+				typeof(bool),
+				typeof(RichTextBoxHelper),
+				new PropertyMetadata(false));
 
-        public static bool GetIsEnabled(RichTextBox richTextBox)
-        {
-            return (bool)richTextBox.GetValue(IsEnabledProperty);
-        }
+		public static readonly DependencyProperty IsEmptyProperty =
+			IsEmptyPropertyKey.DependencyProperty;
 
-        public static void SetIsEnabled(RichTextBox richTextBox, bool value)
-        {
-            richTextBox.SetValue(IsEnabledProperty, value);
-        }
+		public static readonly DependencyProperty IsEnabledProperty =
+							DependencyProperty.RegisterAttached(
+				"IsEnabled",
+				typeof(bool),
+				typeof(RichTextBoxHelper),
+				new PropertyMetadata(false, OnIsEnabledChanged));
 
-        private static void OnIsEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var richTextBox = (RichTextBox)d;
-            var oldValue = (bool)e.OldValue;
-            var newValue = (bool)e.NewValue;
-            if (newValue)
-            {
-                richTextBox.TextChanged += OnTextChanged;
-                UpdateIsEmpty(richTextBox);
-            }
-            else
-            {
-                richTextBox.TextChanged -= OnTextChanged;
-                richTextBox.ClearValue(IsEmptyPropertyKey);
-            }
-        }
+		#endregion Fields
 
-        #endregion
+		#region Methods
 
-        #region IsEmpty
+		private static void OnIsEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			var richTextBox = (RichTextBox)d;
+			var oldValue = (bool)e.OldValue;
+			var newValue = (bool)e.NewValue;
+			if (newValue)
+			{
+				richTextBox.TextChanged += OnTextChanged;
+				UpdateIsEmpty(richTextBox);
+			}
+			else
+			{
+				richTextBox.TextChanged -= OnTextChanged;
+				richTextBox.ClearValue(IsEmptyPropertyKey);
+			}
+		}
 
-        private static readonly DependencyPropertyKey IsEmptyPropertyKey =
-            DependencyProperty.RegisterAttachedReadOnly(
-                "IsEmpty",
-                typeof(bool),
-                typeof(RichTextBoxHelper),
-                new PropertyMetadata(false));
+		private static void OnTextChanged(object sender, TextChangedEventArgs e)
+		{
+			UpdateIsEmpty((RichTextBox)sender);
+		}
 
-        public static readonly DependencyProperty IsEmptyProperty =
-            IsEmptyPropertyKey.DependencyProperty;
+		private static void SetIsEmpty(RichTextBox richTextBox, bool value)
+		{
+			richTextBox.SetValue(IsEmptyPropertyKey, value);
+		}
 
-        public static bool GetIsEmpty(RichTextBox richTextBox)
-        {
-            return (bool)richTextBox.GetValue(IsEmptyProperty);
-        }
+		private static void UpdateIsEmpty(RichTextBox rtb)
+		{
+			bool isEmpty;
+			if (rtb.Document.Blocks.Count == 0)
+			{
+				isEmpty = true;
+			}
+			else
+			{
+				TextPointer startPointer = rtb.Document.ContentStart.GetNextInsertionPosition(LogicalDirection.Forward);
+				TextPointer endPointer = rtb.Document.ContentEnd.GetNextInsertionPosition(LogicalDirection.Backward);
+				isEmpty = startPointer.CompareTo(endPointer) == 0;
+			}
 
-        private static void SetIsEmpty(RichTextBox richTextBox, bool value)
-        {
-            richTextBox.SetValue(IsEmptyPropertyKey, value);
-        }
+			if (GetIsEmpty(rtb) != isEmpty)
+			{
+				SetIsEmpty(rtb, isEmpty);
+			}
+		}
 
-        private static void UpdateIsEmpty(RichTextBox rtb)
-        {
-            bool isEmpty;
-            if (rtb.Document.Blocks.Count == 0)
-            {
-                isEmpty = true;
-            }
-            else
-            {
-                TextPointer startPointer = rtb.Document.ContentStart.GetNextInsertionPosition(LogicalDirection.Forward);
-                TextPointer endPointer = rtb.Document.ContentEnd.GetNextInsertionPosition(LogicalDirection.Backward);
-                isEmpty = startPointer.CompareTo(endPointer) == 0;
-            }
+		public static bool GetIsEmpty(RichTextBox richTextBox)
+		{
+			return (bool)richTextBox.GetValue(IsEmptyProperty);
+		}
 
-            if (GetIsEmpty(rtb) != isEmpty)
-            {
-                SetIsEmpty(rtb, isEmpty);
-            }
-        }
+		public static bool GetIsEnabled(RichTextBox richTextBox)
+		{
+			return (bool)richTextBox.GetValue(IsEnabledProperty);
+		}
 
-        #endregion
+		public static void SetIsEnabled(RichTextBox richTextBox, bool value)
+		{
+			richTextBox.SetValue(IsEnabledProperty, value);
+		}
 
-        private static void OnTextChanged(object sender, TextChangedEventArgs e)
-        {
-            UpdateIsEmpty((RichTextBox)sender);
-        }
-    }
+		#endregion Methods
+	}
 }

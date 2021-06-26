@@ -4,34 +4,47 @@ using System.Windows;
 
 namespace ModernWpf.DesignTime
 {
-    public abstract class IntellisenseResourcesBase : ResourceDictionary, ISupportInitialize
-    {
-        protected IntellisenseResourcesBase()
-        {
-        }
+	public abstract class IntellisenseResourcesBase : ResourceDictionary, ISupportInitialize
+	{
+		#region Constructors
 
-        public new Uri Source
-        {
-            get => base.Source;
-            set
-            {
-                if (DesignMode.DesignModeEnabled)
-                {
-                    base.Source = value;
-                }
-            }
-        }
+		protected IntellisenseResourcesBase()
+		{
+		}
 
-        public new void EndInit()
-        {
-            Clear();
-            MergedDictionaries.Clear();
-            base.EndInit();
-        }
+		#endregion Constructors
 
-        void ISupportInitialize.EndInit()
-        {
-            EndInit();
-        }
-    }
+		#region Properties
+
+		public new Uri Source
+		{
+			get => base.Source;
+
+			set
+			{
+				if (DesignMode.DesignModeEnabled)
+				{
+					base.Source = value;
+				}
+			}
+		}
+
+		#endregion Properties
+
+		#region Methods
+
+		public new void EndInit()
+		{
+			Clear();
+			MergedDictionaries.Clear();
+			base.EndInit();
+		}
+
+		void ISupportInitialize.EndInit()
+		{
+			EndInit();
+		}
+
+		#endregion Methods
+	}
 }

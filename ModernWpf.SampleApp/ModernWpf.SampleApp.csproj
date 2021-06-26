@@ -6,6 +6,7 @@
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
     <LangVersion>latest</LangVersion>
+    <StartupObject>ModernWpf.SampleApp.App</StartupObject>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(TargetFramework)' == 'net45'">

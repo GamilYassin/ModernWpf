@@ -5,217 +5,225 @@ using System.Windows.Input;
 
 namespace ModernWpf.Controls.Primitives
 {
-    public class PivotHeaderScrollViewer : ScrollViewer
-    {
-        private TabControl _tabControl;
+	public class PivotHeaderScrollViewer : ScrollViewer
+	{
+		#region Fields
 
-        static PivotHeaderScrollViewer()
-        {
-            FlowDirectionProperty.OverrideMetadata(typeof(PivotHeaderScrollViewer), new FrameworkPropertyMetadata(OnFlowDirectionChanged));
-            HorizontalScrollBarVisibilityProperty.OverrideMetadata(typeof(PivotHeaderScrollViewer), new FrameworkPropertyMetadata(OnHorizontalScrollBarVisibilityChanged));
-        }
+		private static readonly DependencyPropertyKey CanScrollLeftPropertyKey =
+			DependencyProperty.RegisterReadOnly(
+				nameof(CanScrollLeft),
+				typeof(bool),
+				typeof(PivotHeaderScrollViewer),
+				new PropertyMetadata(false));
 
-        public PivotHeaderScrollViewer()
-        {
-            Loaded += OnLoaded;
-        }
+		private static readonly DependencyPropertyKey CanScrollRightPropertyKey =
+			DependencyProperty.RegisterReadOnly(
+				nameof(CanScrollRight),
+				typeof(bool),
+				typeof(PivotHeaderScrollViewer),
+				new PropertyMetadata(false));
 
-        #region CanScrollLeft
+		private TabControl _tabControl;
 
-        private static readonly DependencyPropertyKey CanScrollLeftPropertyKey =
-            DependencyProperty.RegisterReadOnly(
-                nameof(CanScrollLeft),
-                typeof(bool),
-                typeof(PivotHeaderScrollViewer),
-                new PropertyMetadata(false));
+		public static readonly DependencyProperty CanScrollLeftProperty =
+			CanScrollLeftPropertyKey.DependencyProperty;
 
-        public static readonly DependencyProperty CanScrollLeftProperty =
-            CanScrollLeftPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty CanScrollRightProperty =
+			CanScrollRightPropertyKey.DependencyProperty;
 
-        public bool CanScrollLeft
-        {
-            get => (bool)GetValue(CanScrollLeftProperty);
-            private set => SetValue(CanScrollLeftPropertyKey, value);
-        }
+		#endregion Fields
 
-        #endregion
+		#region Constructors
 
-        #region CanScrollRight
+		static PivotHeaderScrollViewer()
+		{
+			FlowDirectionProperty.OverrideMetadata(typeof(PivotHeaderScrollViewer), new FrameworkPropertyMetadata(OnFlowDirectionChanged));
+			HorizontalScrollBarVisibilityProperty.OverrideMetadata(typeof(PivotHeaderScrollViewer), new FrameworkPropertyMetadata(OnHorizontalScrollBarVisibilityChanged));
+		}
 
-        private static readonly DependencyPropertyKey CanScrollRightPropertyKey =
-            DependencyProperty.RegisterReadOnly(
-                nameof(CanScrollRight),
-                typeof(bool),
-                typeof(PivotHeaderScrollViewer),
-                new PropertyMetadata(false));
+		public PivotHeaderScrollViewer()
+		{
+			Loaded += OnLoaded;
+		}
 
-        public static readonly DependencyProperty CanScrollRightProperty =
-            CanScrollRightPropertyKey.DependencyProperty;
+		#endregion Constructors
 
-        public bool CanScrollRight
-        {
-            get => (bool)GetValue(CanScrollRightProperty);
-            private set => SetValue(CanScrollRightPropertyKey, value);
-        }
+		#region Properties
 
-        #endregion
+		public bool CanScrollLeft
+		{
+			get => (bool)GetValue(CanScrollLeftProperty);
+			private set => SetValue(CanScrollLeftPropertyKey, value);
+		}
 
-        protected override void OnVisualParentChanged(DependencyObject oldParent)
-        {
-            if (_tabControl != null)
-            {
-                _tabControl.SelectionChanged -= OnTabControlSelectionChanged;
-            }
+		public bool CanScrollRight
+		{
+			get => (bool)GetValue(CanScrollRightProperty);
+			private set => SetValue(CanScrollRightPropertyKey, value);
+		}
 
-            base.OnVisualParentChanged(oldParent);
+		#endregion Properties
 
-            _tabControl = TemplatedParent as TabControl;
+		#region Methods
 
-            if (_tabControl != null)
-            {
-                _tabControl.SelectionChanged += OnTabControlSelectionChanged;
-            }
-        }
+		private static bool EqualsEx(object o1, object o2)
+		{
+			try
+			{
+				return Equals(o1, o2);
+			}
+			catch (InvalidCastException)
+			{
+				return false;
+			}
+		}
 
-        protected override void OnScrollChanged(ScrollChangedEventArgs e)
-        {
-            base.OnScrollChanged(e);
+		private static TabItem GetSelectedTabItem(TabControl tabControl)
+		{
+			object selectedItem = tabControl.SelectedItem;
+			if (selectedItem != null)
+			{
+				// Check if the selected item is a TabItem
+				TabItem tabItem = selectedItem as TabItem;
+				if (tabItem == null)
+				{
+					// It is a data item, get its TabItem container
+					tabItem = tabControl.ItemContainerGenerator.ContainerFromIndex(tabControl.SelectedIndex) as TabItem;
 
-            if (e.HorizontalChange != 0 ||
-                e.ExtentWidthChange != 0 ||
-                e.ViewportWidthChange != 0)
-            {
-                UpdateCanScrollHorizontally();
-            }
-        }
+					// Due to event leapfrogging, we may have the wrong container. If so, re-fetch
+					// the right container using a more expensive method. (BTW, the previous line
+					// will cause a debug assert in this case)
+					if (tabItem == null ||
+						!EqualsEx(selectedItem, tabControl.ItemContainerGenerator.ItemFromContainer(tabItem)))
+					{
+						tabItem = tabControl.ItemContainerGenerator.ContainerFromItem(selectedItem) as TabItem;
+					}
+				}
 
-        protected override void OnKeyDown(KeyEventArgs e)
-        {
-        }
+				return tabItem;
+			}
 
-        private static void OnFlowDirectionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var sv = (PivotHeaderScrollViewer)d;
-            sv.UpdateCanScrollHorizontally();
-        }
+			return null;
+		}
 
-        private static void OnHorizontalScrollBarVisibilityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var sv = (PivotHeaderScrollViewer)d;
-            sv.UpdateCanScrollHorizontally();
-        }
+		private static void OnFlowDirectionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			var sv = (PivotHeaderScrollViewer)d;
+			sv.UpdateCanScrollHorizontally();
+		}
 
-        private void UpdateCanScrollHorizontally()
-        {
-            bool canScrollLeft = CanScrollHorizontallyInDirection(false);
-            if (CanScrollLeft != canScrollLeft)
-            {
-                CanScrollLeft = canScrollLeft;
-            }
+		private static void OnHorizontalScrollBarVisibilityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			var sv = (PivotHeaderScrollViewer)d;
+			sv.UpdateCanScrollHorizontally();
+		}
 
-            bool canScrollRight = CanScrollHorizontallyInDirection(true);
-            if (CanScrollRight != canScrollRight)
-            {
-                CanScrollRight = canScrollRight;
-            }
-        }
+		private void BringSelectedTabItemIntoView()
+		{
+			if (_tabControl != null)
+			{
+				var item = GetSelectedTabItem(_tabControl);
+				if (item != null)
+				{
+					item.BringIntoView();
+				}
+			}
+		}
 
-        private bool CanScrollHorizontallyInDirection(bool inPositiveDirection)
-        {
-            bool canScrollInDirection = false;
+		private bool CanScrollHorizontallyInDirection(bool inPositiveDirection)
+		{
+			bool canScrollInDirection = false;
 
-            if (FlowDirection == FlowDirection.RightToLeft)
-            {
-                inPositiveDirection = !inPositiveDirection;
-            }
+			if (FlowDirection == FlowDirection.RightToLeft)
+			{
+				inPositiveDirection = !inPositiveDirection;
+			}
 
-            if (HorizontalScrollBarVisibility != ScrollBarVisibility.Disabled)
-            {
-                var extentWidth = ExtentWidth;
-                var viewportWidth = ViewportWidth;
-                if (extentWidth > viewportWidth)
-                {
-                    if (inPositiveDirection)
-                    {
-                        var maxHorizontalOffset = extentWidth - viewportWidth;
-                        if (HorizontalOffset < maxHorizontalOffset)
-                        {
-                            canScrollInDirection = true;
-                        }
-                    }
-                    else
-                    {
-                        if (HorizontalOffset > 0)
-                        {
-                            canScrollInDirection = true;
-                        }
-                    }
-                }
-            }
+			if (HorizontalScrollBarVisibility != ScrollBarVisibility.Disabled)
+			{
+				var extentWidth = ExtentWidth;
+				var viewportWidth = ViewportWidth;
+				if (extentWidth > viewportWidth)
+				{
+					if (inPositiveDirection)
+					{
+						var maxHorizontalOffset = extentWidth - viewportWidth;
+						if (HorizontalOffset < maxHorizontalOffset)
+						{
+							canScrollInDirection = true;
+						}
+					}
+					else
+					{
+						if (HorizontalOffset > 0)
+						{
+							canScrollInDirection = true;
+						}
+					}
+				}
+			}
 
-            return canScrollInDirection;
-        }
+			return canScrollInDirection;
+		}
 
-        private void OnLoaded(object sender, RoutedEventArgs e)
-        {
-            BringSelectedTabItemIntoView();
-        }
+		private void OnLoaded(object sender, RoutedEventArgs e)
+		{
+			BringSelectedTabItemIntoView();
+		}
 
-        private void OnTabControlSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            BringSelectedTabItemIntoView();
-        }
+		private void OnTabControlSelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			BringSelectedTabItemIntoView();
+		}
 
-        private void BringSelectedTabItemIntoView()
-        {
-            if (_tabControl != null)
-            {
-                var item = GetSelectedTabItem(_tabControl);
-                if (item != null)
-                {
-                    item.BringIntoView();
-                }
-            }
-        }
+		private void UpdateCanScrollHorizontally()
+		{
+			bool canScrollLeft = CanScrollHorizontallyInDirection(false);
+			if (CanScrollLeft != canScrollLeft)
+			{
+				CanScrollLeft = canScrollLeft;
+			}
 
-        private static TabItem GetSelectedTabItem(TabControl tabControl)
-        {
-            object selectedItem = tabControl.SelectedItem;
-            if (selectedItem != null)
-            {
-                // Check if the selected item is a TabItem
-                TabItem tabItem = selectedItem as TabItem;
-                if (tabItem == null)
-                {
-                    // It is a data item, get its TabItem container
-                    tabItem = tabControl.ItemContainerGenerator.ContainerFromIndex(tabControl.SelectedIndex) as TabItem;
+			bool canScrollRight = CanScrollHorizontallyInDirection(true);
+			if (CanScrollRight != canScrollRight)
+			{
+				CanScrollRight = canScrollRight;
+			}
+		}
 
-                    // Due to event leapfrogging, we may have the wrong container.
-                    // If so, re-fetch the right container using a more expensive method.
-                    // (BTW, the previous line will cause a debug assert in this case) 
-                    if (tabItem == null ||
-                        !EqualsEx(selectedItem, tabControl.ItemContainerGenerator.ItemFromContainer(tabItem)))
-                    {
-                        tabItem = tabControl.ItemContainerGenerator.ContainerFromItem(selectedItem) as TabItem;
-                    }
-                }
+		protected override void OnKeyDown(KeyEventArgs e)
+		{
+		}
 
-                return tabItem;
-            }
+		protected override void OnScrollChanged(ScrollChangedEventArgs e)
+		{
+			base.OnScrollChanged(e);
 
-            return null;
-        }
+			if (e.HorizontalChange != 0 ||
+				e.ExtentWidthChange != 0 ||
+				e.ViewportWidthChange != 0)
+			{
+				UpdateCanScrollHorizontally();
+			}
+		}
 
-        private static bool EqualsEx(object o1, object o2)
-        {
-            try
-            {
-                return Equals(o1, o2);
-            }
-            catch (InvalidCastException)
-            {
-                return false;
-            }
-        }
-    }
+		protected override void OnVisualParentChanged(DependencyObject oldParent)
+		{
+			if (_tabControl != null)
+			{
+				_tabControl.SelectionChanged -= OnTabControlSelectionChanged;
+			}
+
+			base.OnVisualParentChanged(oldParent);
+
+			_tabControl = TemplatedParent as TabControl;
+
+			if (_tabControl != null)
+			{
+				_tabControl.SelectionChanged += OnTabControlSelectionChanged;
+			}
+		}
+
+		#endregion Methods
+	}
 }

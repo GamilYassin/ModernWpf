@@ -5,52 +5,56 @@ using System.Windows.Input;
 
 namespace ModernWpf.Controls.Primitives
 {
-    public static class CalendarHelper
-    {
-        #region AutoReleaseMouseCapture
+	public static class CalendarHelper
+	{
+		#region Fields
 
-        public static bool GetAutoReleaseMouseCapture(Calendar calendar)
-        {
-            return (bool)calendar.GetValue(AutoReleaseMouseCaptureProperty);
-        }
+		public static readonly DependencyProperty AutoReleaseMouseCaptureProperty = DependencyProperty.RegisterAttached(
+			"AutoReleaseMouseCapture",
+			typeof(bool),
+			typeof(CalendarHelper),
+			new PropertyMetadata(OnAutoReleaseMouseCaptureChanged));
 
-        public static void SetAutoReleaseMouseCapture(Calendar calendar, bool value)
-        {
-            calendar.SetValue(AutoReleaseMouseCaptureProperty, value);
-        }
+		#endregion Fields
 
-        public static readonly DependencyProperty AutoReleaseMouseCaptureProperty = DependencyProperty.RegisterAttached(
-            "AutoReleaseMouseCapture",
-            typeof(bool),
-            typeof(CalendarHelper),
-            new PropertyMetadata(OnAutoReleaseMouseCaptureChanged));
+		#region Methods
 
-        private static void OnAutoReleaseMouseCaptureChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var calendar = (Calendar)d;
-            if ((bool)e.NewValue)
-            {
-                calendar.GotMouseCapture += OnCalendarGotMouseCapture;
-            }
-            else
-            {
-                calendar.GotMouseCapture -= OnCalendarGotMouseCapture;
-            }
-        }
+		private static void OnAutoReleaseMouseCaptureChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			var calendar = (Calendar)d;
+			if ((bool)e.NewValue)
+			{
+				calendar.GotMouseCapture += OnCalendarGotMouseCapture;
+			}
+			else
+			{
+				calendar.GotMouseCapture -= OnCalendarGotMouseCapture;
+			}
+		}
 
-        #endregion
+		private static void OnCalendarGotMouseCapture(object sender, MouseEventArgs e)
+		{
+			var calendar = (Calendar)sender;
+			if (calendar.SelectionMode != CalendarSelectionMode.MultipleRange)
+			{
+				UIElement originalElement = e.OriginalSource as UIElement;
+				if (originalElement is CalendarDayButton || originalElement is CalendarItem)
+				{
+					originalElement.ReleaseMouseCapture();
+				}
+			}
+		}
 
-        private static void OnCalendarGotMouseCapture(object sender, MouseEventArgs e)
-        {
-            var calendar = (Calendar)sender;
-            if (calendar.SelectionMode != CalendarSelectionMode.MultipleRange)
-            {
-                UIElement originalElement = e.OriginalSource as UIElement;
-                if (originalElement is CalendarDayButton || originalElement is CalendarItem)
-                {
-                    originalElement.ReleaseMouseCapture();
-                }
-            }
-        }
-    }
+		public static bool GetAutoReleaseMouseCapture(Calendar calendar)
+		{
+			return (bool)calendar.GetValue(AutoReleaseMouseCaptureProperty);
+		}
+
+		public static void SetAutoReleaseMouseCapture(Calendar calendar, bool value)
+		{
+			calendar.SetValue(AutoReleaseMouseCaptureProperty, value);
+		}
+
+		#endregion Methods
+	}
 }

@@ -3,86 +3,78 @@ using System.Windows.Controls;
 
 namespace ModernWpf.Controls.Primitives
 {
-    public static class TabControlHelper
-    {
-        #region TabStripHeader
+	public static class TabControlHelper
+	{
+		#region Fields
 
-        public static readonly DependencyProperty TabStripHeaderProperty =
-            DependencyProperty.RegisterAttached(
-                "TabStripHeader",
-                typeof(object),
-                typeof(TabControlHelper));
+		public static readonly DependencyProperty TabStripFooterProperty =
+			DependencyProperty.RegisterAttached(
+				"TabStripFooter",
+				typeof(object),
+				typeof(TabControlHelper));
 
-        public static object GetTabStripHeader(TabControl tabControl)
-        {
-            return tabControl.GetValue(TabStripHeaderProperty);
-        }
+		public static readonly DependencyProperty TabStripFooterTemplateProperty =
+			DependencyProperty.RegisterAttached(
+				"TabStripFooterTemplate",
+				typeof(DataTemplate),
+				typeof(TabControlHelper));
 
-        public static void SetTabStripHeader(TabControl tabControl, object value)
-        {
-            tabControl.SetValue(TabStripHeaderProperty, value);
-        }
+		public static readonly DependencyProperty TabStripHeaderProperty =
+							DependencyProperty.RegisterAttached(
+				"TabStripHeader",
+				typeof(object),
+				typeof(TabControlHelper));
 
-        #endregion
+		public static readonly DependencyProperty TabStripHeaderTemplateProperty =
+			DependencyProperty.RegisterAttached(
+				"TabStripHeaderTemplate",
+				typeof(DataTemplate),
+				typeof(TabControlHelper));
 
-        #region TabStripHeaderTemplate
+		#endregion Fields
 
-        public static readonly DependencyProperty TabStripHeaderTemplateProperty =
-            DependencyProperty.RegisterAttached(
-                "TabStripHeaderTemplate",
-                typeof(DataTemplate),
-                typeof(TabControlHelper));
+		#region Methods
 
-        public static DataTemplate GetTabStripHeaderTemplate(TabControl tabControl)
-        {
-            return (DataTemplate)tabControl.GetValue(TabStripHeaderTemplateProperty);
-        }
+		public static object GetTabStripFooter(TabControl tabControl)
+		{
+			return tabControl.GetValue(TabStripFooterProperty);
+		}
 
-        public static void SetTabStripHeaderTemplate(TabControl tabControl, DataTemplate value)
-        {
-            tabControl.SetValue(TabStripHeaderTemplateProperty, value);
-        }
+		public static DataTemplate GetTabStripFooterTemplate(TabControl tabControl)
+		{
+			return (DataTemplate)tabControl.GetValue(TabStripFooterTemplateProperty);
+		}
 
-        #endregion
+		public static object GetTabStripHeader(TabControl tabControl)
+		{
+			return tabControl.GetValue(TabStripHeaderProperty);
+		}
 
-        #region TabStripFooter
+		public static DataTemplate GetTabStripHeaderTemplate(TabControl tabControl)
+		{
+			return (DataTemplate)tabControl.GetValue(TabStripHeaderTemplateProperty);
+		}
 
-        public static readonly DependencyProperty TabStripFooterProperty =
-            DependencyProperty.RegisterAttached(
-                "TabStripFooter",
-                typeof(object),
-                typeof(TabControlHelper));
+		public static void SetTabStripFooter(TabControl tabControl, object value)
+		{
+			tabControl.SetValue(TabStripFooterProperty, value);
+		}
 
-        public static object GetTabStripFooter(TabControl tabControl)
-        {
-            return tabControl.GetValue(TabStripFooterProperty);
-        }
+		public static void SetTabStripFooterTemplate(TabControl tabControl, DataTemplate value)
+		{
+			tabControl.SetValue(TabStripFooterTemplateProperty, value);
+		}
 
-        public static void SetTabStripFooter(TabControl tabControl, object value)
-        {
-            tabControl.SetValue(TabStripFooterProperty, value);
-        }
+		public static void SetTabStripHeader(TabControl tabControl, object value)
+		{
+			tabControl.SetValue(TabStripHeaderProperty, value);
+		}
 
-        #endregion
+		public static void SetTabStripHeaderTemplate(TabControl tabControl, DataTemplate value)
+		{
+			tabControl.SetValue(TabStripHeaderTemplateProperty, value);
+		}
 
-        #region TabStripFooterTemplate
-
-        public static readonly DependencyProperty TabStripFooterTemplateProperty =
-            DependencyProperty.RegisterAttached(
-                "TabStripFooterTemplate",
-                typeof(DataTemplate),
-                typeof(TabControlHelper));
-
-        public static DataTemplate GetTabStripFooterTemplate(TabControl tabControl)
-        {
-            return (DataTemplate)tabControl.GetValue(TabStripFooterTemplateProperty);
-        }
-
-        public static void SetTabStripFooterTemplate(TabControl tabControl, DataTemplate value)
-        {
-            tabControl.SetValue(TabStripFooterTemplateProperty, value);
-        }
-
-        #endregion
-    }
+		#endregion Methods
+	}
 }

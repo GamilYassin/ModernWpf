@@ -5,30 +5,38 @@ using System.Windows.Media;
 
 namespace ModernWpf.Controls
 {
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public class FontIconFallback : Control
-    {
-        static FontIconFallback()
-        {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(FontIconFallback), new FrameworkPropertyMetadata(typeof(FontIconFallback)));
-            FocusableProperty.OverrideMetadata(typeof(FontIconFallback), new FrameworkPropertyMetadata(false));
-        }
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public class FontIconFallback : Control
+	{
+		#region Fields
 
-        #region Data
+		public static readonly DependencyProperty DataProperty =
+			DependencyProperty.Register(
+				nameof(Data),
+				typeof(Geometry),
+				typeof(FontIconFallback),
+				null);
 
-        public static readonly DependencyProperty DataProperty =
-            DependencyProperty.Register(
-                nameof(Data),
-                typeof(Geometry),
-                typeof(FontIconFallback),
-                null);
+		#endregion Fields
 
-        public Geometry Data
-        {
-            get => (Geometry)GetValue(DataProperty);
-            set => SetValue(DataProperty, value);
-        }
+		#region Constructors
 
-        #endregion
-    }
+		static FontIconFallback()
+		{
+			DefaultStyleKeyProperty.OverrideMetadata(typeof(FontIconFallback), new FrameworkPropertyMetadata(typeof(FontIconFallback)));
+			FocusableProperty.OverrideMetadata(typeof(FontIconFallback), new FrameworkPropertyMetadata(false));
+		}
+
+		#endregion Constructors
+
+		#region Properties
+
+		public Geometry Data
+		{
+			get => (Geometry)GetValue(DataProperty);
+			set => SetValue(DataProperty, value);
+		}
+
+		#endregion Properties
+	}
 }

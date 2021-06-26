@@ -4,114 +4,114 @@ using System.Windows.Controls;
 
 namespace ModernWpf.Controls.Primitives
 {
-    public static class WindowHelper
-    {
-        #region UseModernWindowStyle
+	public static class WindowHelper
+	{
+		#region Fields
 
-        private const string DefaultWindowStyleKey = "DefaultWindowStyle";
+		private const string DefaultWindowStyleKey = "DefaultWindowStyle";
 
-        public static readonly DependencyProperty UseModernWindowStyleProperty =
-            DependencyProperty.RegisterAttached(
-                "UseModernWindowStyle",
-                typeof(bool),
-                typeof(WindowHelper),
-                new PropertyMetadata(OnUseModernWindowStyleChanged));
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public static readonly DependencyProperty FixMaximizedWindowProperty =
+			DependencyProperty.RegisterAttached(
+				"FixMaximizedWindow",
+				typeof(bool),
+				typeof(WindowHelper),
+				new PropertyMetadata(false, OnFixMaximizedWindowChanged));
 
-        public static bool GetUseModernWindowStyle(Window window)
-        {
-            return (bool)window.GetValue(UseModernWindowStyleProperty);
-        }
+		public static readonly DependencyProperty UseModernWindowStyleProperty =
+					DependencyProperty.RegisterAttached(
+				"UseModernWindowStyle",
+				typeof(bool),
+				typeof(WindowHelper),
+				new PropertyMetadata(OnUseModernWindowStyleChanged));
 
-        public static void SetUseModernWindowStyle(Window window, bool value)
-        {
-            window.SetValue(UseModernWindowStyleProperty, value);
-        }
+		#endregion Fields
 
-        private static void OnUseModernWindowStyleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            bool newValue = (bool)e.NewValue;
+		#region Methods
 
-            if (DesignerProperties.GetIsInDesignMode(d))
-            {
-                if (d is Control control)
-                {
-                    if (newValue)
-                    {
-                        if (control.TryFindResource(DefaultWindowStyleKey) is Style style)
-                        {
-                            var dStyle = new Style();
+		private static void OnFixMaximizedWindowChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			if (d is Window window)
+			{
+				if ((bool)e.NewValue)
+				{
+					MaximizedWindowFixer.SetMaximizedWindowFixer(window, new MaximizedWindowFixer());
+				}
+				else
+				{
+					window.ClearValue(MaximizedWindowFixer.MaximizedWindowFixerProperty);
+				}
+			}
+		}
 
-                            foreach (Setter setter in style.Setters)
-                            {
-                                if (setter.Property == Control.BackgroundProperty ||
-                                    setter.Property == Control.ForegroundProperty)
-                                {
-                                    dStyle.Setters.Add(setter);
-                                }
-                            }
+		private static void OnUseModernWindowStyleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			bool newValue = (bool)e.NewValue;
 
-                            control.Style = dStyle;
-                        }
-                    }
-                    else
-                    {
-                        control.ClearValue(FrameworkElement.StyleProperty);
-                    }
-                }
-            }
-            else
-            {
-                var window = (Window)d;
-                if (newValue)
-                {
-                    window.SetResourceReference(FrameworkElement.StyleProperty, DefaultWindowStyleKey);
-                }
-                else
-                {
-                    window.ClearValue(FrameworkElement.StyleProperty);
-                }
-            }
-        }
+			if (DesignerProperties.GetIsInDesignMode(d))
+			{
+				if (d is Control control)
+				{
+					if (newValue)
+					{
+						if (control.TryFindResource(DefaultWindowStyleKey) is Style style)
+						{
+							var dStyle = new Style();
 
-        #endregion
+							foreach (Setter setter in style.Setters)
+							{
+								if (setter.Property == Control.BackgroundProperty ||
+									setter.Property == Control.ForegroundProperty)
+								{
+									dStyle.Setters.Add(setter);
+								}
+							}
 
-        #region FixMaximizedWindow
+							control.Style = dStyle;
+						}
+					}
+					else
+					{
+						control.ClearValue(FrameworkElement.StyleProperty);
+					}
+				}
+			}
+			else
+			{
+				var window = (Window)d;
+				if (newValue)
+				{
+					window.SetResourceReference(FrameworkElement.StyleProperty, DefaultWindowStyleKey);
+				}
+				else
+				{
+					window.ClearValue(FrameworkElement.StyleProperty);
+				}
+			}
+		}
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public static readonly DependencyProperty FixMaximizedWindowProperty =
-            DependencyProperty.RegisterAttached(
-                "FixMaximizedWindow",
-                typeof(bool),
-                typeof(WindowHelper),
-                new PropertyMetadata(false, OnFixMaximizedWindowChanged));
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public static bool GetFixMaximizedWindow(Window window)
+		{
+			return (bool)window.GetValue(FixMaximizedWindowProperty);
+		}
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public static bool GetFixMaximizedWindow(Window window)
-        {
-            return (bool)window.GetValue(FixMaximizedWindowProperty);
-        }
+		public static bool GetUseModernWindowStyle(Window window)
+		{
+			return (bool)window.GetValue(UseModernWindowStyleProperty);
+		}
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public static void SetFixMaximizedWindow(Window window, bool value)
-        {
-            window.SetValue(FixMaximizedWindowProperty, value);
-        }
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public static void SetFixMaximizedWindow(Window window, bool value)
+		{
+			window.SetValue(FixMaximizedWindowProperty, value);
+		}
 
-        private static void OnFixMaximizedWindowChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            if (d is Window window)
-            {
-                if ((bool)e.NewValue)
-                {
-                    MaximizedWindowFixer.SetMaximizedWindowFixer(window, new MaximizedWindowFixer());
-                }
-                else
-                {
-                    window.ClearValue(MaximizedWindowFixer.MaximizedWindowFixerProperty);
-                }
-            }
-        }
+		public static void SetUseModernWindowStyle(Window window, bool value)
+		{
+			window.SetValue(UseModernWindowStyleProperty, value);
+		}
 
-        #endregion
-    }
+		#endregion Methods
+	}
 }

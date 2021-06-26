@@ -5,29 +5,37 @@ using System.Windows.Data;
 
 namespace ModernWpf.Controls.Primitives
 {
-    public class PlacementRectangleConverter : IMultiValueConverter
-    {
-        public Thickness Margin { get; set; }
+	public class PlacementRectangleConverter : IMultiValueConverter
+	{
+		#region Properties
 
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (values.Length == 2 &&
-                values[0] is double width &&
-                values[1] is double height)
-            {
-                var margin = Margin;
-                var topLeft = new Point(margin.Left, margin.Top);
-                var bottomRight = new Point(width - margin.Right, height - margin.Bottom);
-                var rect = new Rect(topLeft, bottomRight);
-                return rect;
-            }
+		public Thickness Margin { get; set; }
 
-            return Rect.Empty;
-        }
+		#endregion Properties
 
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
+		#region Methods
+
+		public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+		{
+			if (values.Length == 2 &&
+				values[0] is double width &&
+				values[1] is double height)
+			{
+				var margin = Margin;
+				var topLeft = new Point(margin.Left, margin.Top);
+				var bottomRight = new Point(width - margin.Right, height - margin.Bottom);
+				var rect = new Rect(topLeft, bottomRight);
+				return rect;
+			}
+
+			return Rect.Empty;
+		}
+
+		public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion Methods
+	}
 }

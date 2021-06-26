@@ -5,175 +5,168 @@ using System.Windows.Media;
 
 namespace ModernWpf.Controls.Primitives
 {
-    public static class ScrollBarHelper
-    {
-        private const string StateExpanded = "Expanded";
-        private const string StateCollapsed = "Collapsed";
+	public static class ScrollBarHelper
+	{
+		#region Fields
 
-        #region IsEnabled
+		private const string StateCollapsed = "Collapsed";
 
-        public static readonly DependencyProperty IsEnabledProperty =
-            DependencyProperty.RegisterAttached(
-                "IsEnabled",
-                typeof(bool),
-                typeof(ScrollBarHelper),
-                new PropertyMetadata(false, OnIsEnabledChanged));
+		private const string StateExpanded = "Expanded";
 
-        public static bool GetIsEnabled(ScrollBar scrollBar)
-        {
-            return (bool)scrollBar.GetValue(IsEnabledProperty);
-        }
+		public static readonly DependencyProperty CollapsedThumbBackgroundColorProperty =
+			DependencyProperty.RegisterAttached(
+				"CollapsedThumbBackgroundColor",
+				typeof(Color?),
+				typeof(ScrollBarHelper),
+				new PropertyMetadata((Color?)null));
 
-        public static void SetIsEnabled(ScrollBar scrollBar, bool value)
-        {
-            scrollBar.SetValue(IsEnabledProperty, value);
-        }
+		public static readonly DependencyProperty ExpandedThumbBackgroundColorProperty =
+			DependencyProperty.RegisterAttached(
+				"ExpandedThumbBackgroundColor",
+				typeof(Color?),
+				typeof(ScrollBarHelper),
+				new PropertyMetadata((Color?)null));
 
-        private static void OnIsEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var scrollBar = (ScrollBar)d;
-            var oldValue = (bool)e.OldValue;
-            var newValue = (bool)e.NewValue;
+		public static readonly DependencyProperty IndicatorModeProperty =
+			DependencyProperty.RegisterAttached(
+				"IndicatorMode",
+				typeof(ScrollingIndicatorMode),
+				typeof(ScrollBarHelper),
+				new PropertyMetadata(ScrollingIndicatorMode.MouseIndicator, OnIndicatorModeChanged));
 
-            if (newValue)
-            {
-                scrollBar.IsVisibleChanged += OnIsVisibleChanged;
-                scrollBar.MouseEnter += OnIsMouseOverChanged;
-                scrollBar.MouseLeave += OnIsMouseOverChanged;
-                scrollBar.IsEnabledChanged += OnIsEnabledChanged;
+		public static readonly DependencyProperty IsEnabledProperty =
+									DependencyProperty.RegisterAttached(
+				"IsEnabled",
+				typeof(bool),
+				typeof(ScrollBarHelper),
+				new PropertyMetadata(false, OnIsEnabledChanged));
 
-                if (scrollBar.IsLoaded)
-                {
-                    UpdateVisualState(scrollBar);
-                }
-            }
-            else
-            {
-                scrollBar.IsVisibleChanged -= OnIsVisibleChanged;
-                scrollBar.MouseEnter -= OnIsMouseOverChanged;
-                scrollBar.MouseLeave -= OnIsMouseOverChanged;
-                scrollBar.IsEnabledChanged -= OnIsEnabledChanged;
-            }
-        }
+		#endregion Fields
 
-        #endregion
+		#region Methods
 
-        #region IndicatorMode
+		private static void OnIndicatorModeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			UpdateVisualState((ScrollBar)d);
+		}
 
-        public static readonly DependencyProperty IndicatorModeProperty =
-            DependencyProperty.RegisterAttached(
-                "IndicatorMode",
-                typeof(ScrollingIndicatorMode),
-                typeof(ScrollBarHelper),
-                new PropertyMetadata(ScrollingIndicatorMode.MouseIndicator, OnIndicatorModeChanged));
+		private static void OnIsEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			var scrollBar = (ScrollBar)d;
+			var oldValue = (bool)e.OldValue;
+			var newValue = (bool)e.NewValue;
 
-        public static ScrollingIndicatorMode GetIndicatorMode(ScrollBar scrollBar)
-        {
-            return (ScrollingIndicatorMode)scrollBar.GetValue(IndicatorModeProperty);
-        }
+			if (newValue)
+			{
+				scrollBar.IsVisibleChanged += OnIsVisibleChanged;
+				scrollBar.MouseEnter += OnIsMouseOverChanged;
+				scrollBar.MouseLeave += OnIsMouseOverChanged;
+				scrollBar.IsEnabledChanged += OnIsEnabledChanged;
 
-        public static void SetIndicatorMode(ScrollBar scrollBar, ScrollingIndicatorMode value)
-        {
-            scrollBar.SetValue(IndicatorModeProperty, value);
-        }
+				if (scrollBar.IsLoaded)
+				{
+					UpdateVisualState(scrollBar);
+				}
+			}
+			else
+			{
+				scrollBar.IsVisibleChanged -= OnIsVisibleChanged;
+				scrollBar.MouseEnter -= OnIsMouseOverChanged;
+				scrollBar.MouseLeave -= OnIsMouseOverChanged;
+				scrollBar.IsEnabledChanged -= OnIsEnabledChanged;
+			}
+		}
 
-        private static void OnIndicatorModeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            UpdateVisualState((ScrollBar)d);
-        }
+		private static void OnIsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
+		{
+			var scrollBar = (ScrollBar)sender;
+			UpdateVisualState(scrollBar);
+		}
 
-        #endregion
+		private static void OnIsMouseOverChanged(object sender, MouseEventArgs e)
+		{
+			var scrollBar = (ScrollBar)sender;
+			if (scrollBar.IsEnabled)
+			{
+				UpdateVisualState(scrollBar);
+			}
+		}
 
-        #region CollapsedThumbBackgroundColor
+		private static void OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+		{
+			if ((bool)e.NewValue)
+			{
+				var scrollBar = (ScrollBar)sender;
+				scrollBar.ApplyTemplate();
+				UpdateVisualState(scrollBar, false);
+			}
+		}
 
-        public static readonly DependencyProperty CollapsedThumbBackgroundColorProperty =
-            DependencyProperty.RegisterAttached(
-                "CollapsedThumbBackgroundColor",
-                typeof(Color?),
-                typeof(ScrollBarHelper),
-                new PropertyMetadata((Color?)null));
+		private static void UpdateVisualState(ScrollBar scrollBar, bool useTransitions = true)
+		{
+			string stateName;
 
-        public static Color? GetCollapsedThumbBackgroundColor(ScrollBar scrollBar)
-        {
-            return (Color?)scrollBar.GetValue(CollapsedThumbBackgroundColorProperty);
-        }
+			if (scrollBar.IsEnabled)
+			{
+				bool autoHide = GetIndicatorMode(scrollBar) != ScrollingIndicatorMode.MouseIndicator;
+				if (autoHide)
+				{
+					stateName = scrollBar.IsMouseOver ? StateExpanded : StateCollapsed;
+				}
+				else
+				{
+					stateName = StateExpanded;
+				}
+			}
+			else
+			{
+				stateName = StateCollapsed;
+				useTransitions = false;
+			}
 
-        public static void SetCollapsedThumbBackgroundColor(ScrollBar scrollBar, Color? value)
-        {
-            scrollBar.SetValue(CollapsedThumbBackgroundColorProperty, value);
-        }
+			VisualStateManager.GoToState(scrollBar, stateName, useTransitions);
+		}
 
-        #endregion
+		public static Color? GetCollapsedThumbBackgroundColor(ScrollBar scrollBar)
+		{
+			return (Color?)scrollBar.GetValue(CollapsedThumbBackgroundColorProperty);
+		}
 
-        #region ExpandedThumbBackgroundColor
+		public static Color? GetExpandedThumbBackgroundColor(ScrollBar scrollBar)
+		{
+			return (Color?)scrollBar.GetValue(ExpandedThumbBackgroundColorProperty);
+		}
 
-        public static readonly DependencyProperty ExpandedThumbBackgroundColorProperty =
-            DependencyProperty.RegisterAttached(
-                "ExpandedThumbBackgroundColor",
-                typeof(Color?),
-                typeof(ScrollBarHelper),
-                new PropertyMetadata((Color?)null));
+		public static ScrollingIndicatorMode GetIndicatorMode(ScrollBar scrollBar)
+		{
+			return (ScrollingIndicatorMode)scrollBar.GetValue(IndicatorModeProperty);
+		}
 
-        public static Color? GetExpandedThumbBackgroundColor(ScrollBar scrollBar)
-        {
-            return (Color?)scrollBar.GetValue(ExpandedThumbBackgroundColorProperty);
-        }
+		public static bool GetIsEnabled(ScrollBar scrollBar)
+		{
+			return (bool)scrollBar.GetValue(IsEnabledProperty);
+		}
 
-        public static void SetExpandedThumbBackgroundColor(ScrollBar scrollBar, Color? value)
-        {
-            scrollBar.SetValue(ExpandedThumbBackgroundColorProperty, value);
-        }
+		public static void SetCollapsedThumbBackgroundColor(ScrollBar scrollBar, Color? value)
+		{
+			scrollBar.SetValue(CollapsedThumbBackgroundColorProperty, value);
+		}
 
-        #endregion
+		public static void SetExpandedThumbBackgroundColor(ScrollBar scrollBar, Color? value)
+		{
+			scrollBar.SetValue(ExpandedThumbBackgroundColorProperty, value);
+		}
 
-        private static void OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            if ((bool)e.NewValue)
-            {
-                var scrollBar = (ScrollBar)sender;
-                scrollBar.ApplyTemplate();
-                UpdateVisualState(scrollBar, false);
-            }
-        }
+		public static void SetIndicatorMode(ScrollBar scrollBar, ScrollingIndicatorMode value)
+		{
+			scrollBar.SetValue(IndicatorModeProperty, value);
+		}
 
-        private static void OnIsMouseOverChanged(object sender, MouseEventArgs e)
-        {
-            var scrollBar = (ScrollBar)sender;
-            if (scrollBar.IsEnabled)
-            {
-                UpdateVisualState(scrollBar);
-            }
-        }
+		public static void SetIsEnabled(ScrollBar scrollBar, bool value)
+		{
+			scrollBar.SetValue(IsEnabledProperty, value);
+		}
 
-        private static void OnIsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            var scrollBar = (ScrollBar)sender;
-            UpdateVisualState(scrollBar);
-        }
-
-        private static void UpdateVisualState(ScrollBar scrollBar, bool useTransitions = true)
-        {
-            string stateName;
-
-            if (scrollBar.IsEnabled)
-            {
-                bool autoHide = GetIndicatorMode(scrollBar) != ScrollingIndicatorMode.MouseIndicator;
-                if (autoHide)
-                {
-                    stateName = scrollBar.IsMouseOver ? StateExpanded : StateCollapsed;
-                }
-                else
-                {
-                    stateName = StateExpanded;
-                }
-            }
-            else
-            {
-                stateName = StateCollapsed;
-                useTransitions = false;
-            }
-
-            VisualStateManager.GoToState(scrollBar, stateName, useTransitions);
-        }
-    }
+		#endregion Methods
+	}
 }
